@@ -8,6 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil.setContentView
+import androidx.lifecycle.observe
 import com.example.testproject.data.MyWeather
 import com.example.testproject.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
@@ -42,41 +43,31 @@ class MainActivity : AppCompatActivity() {
         checkViewsVisibility(false)
 
         btnGet.setOnClickListener {
-            if(myText.text.isNotEmpty()) getRequest("${myText.text}")
-            else Toast.makeText(applicationContext, "Please enter the city name", Toast.LENGTH_SHORT).show()
+            btnClicked()
         }
     }
 
-    private fun getRequest(text: String) = CoroutineScope(Dispatchers.Main).launch {
-        try {
-            checkViewsVisibility(true)
-            // Первый Get запрос для получения cityID по cityName
-            val cityId = withContext(Dispatchers.IO) { Network.weatherAPI.getLocationId(text).execute() }
-            if (cityId.isSuccessful) {
-                // Второй Get запрос для получения погоды по cityID
-                val weather =  withContext(Dispatchers.IO) { cityId.body()?.get(0)?.woeid?.let { Network.weatherAPI.getWeather(it).execute() } }
-                if(weather != null && weather.isSuccessful) {
-                    weather.body()?.let { showAlertDialog(it) }
-                } else {
-                    Toast.makeText(application, "Something wrong! Please try again later.", Toast.LENGTH_SHORT).show()
-                    Log.v("Error", "Weather body ERROR: ${weather?.code()} ${weather?.errorBody()} ${weather?.message()}")
+    private fun btnClicked() {
+        if(myText.text.isNotEmpty()) {
+            try {
+                checkViewsVisibility(true)
+                myViewModel.getCityId("${myText.text}")
+                myViewModel.myCityId.observe(this) { myViewModel.getWeather(it) }
+                myViewModel.myWeather.observe(this) { showAlertDialog(it) }
+            } catch (e: Exception) {
+                when(e) {
+                    is UnknownHostException -> Log.d("Exception", "Server is unreachable")
+                    is SocketTimeoutException -> Log.d("Exception", "No internet connection")
+                    is IOException -> Log.d("Exception", "IOException")
+                    is RuntimeException -> Log.d("Exception", "RuntimeException")
                 }
-            } else {
-                Toast.makeText(application, "Something wrong! Please try again later", Toast.LENGTH_SHORT).show()
-                Log.v("Error", "cityId body ERROR: ${cityId.code()} ${cityId.errorBody()} ${cityId.message()}")
+                Toast.makeText(application, "An error! Please try again later", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            } finally {
+                checkViewsVisibility(false)
             }
-            checkViewsVisibility(false)
-        } catch (e: Exception) {
-            when(e) {
-                is UnknownHostException -> Log.d("Exception", "Server is unreachable")
-                is SocketTimeoutException -> Log.d("Exception", "No internet connection")
-                is IOException -> Log.d("Exception", "IOException")
-                is RuntimeException -> Log.d("Exception", "RuntimeException")
-            }
-            checkViewsVisibility(false)
-            Toast.makeText(application, "An error! Please try again later", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
         }
+        else Toast.makeText(applicationContext, "Please enter the city name", Toast.LENGTH_SHORT).show()
     }
 
     private fun showAlertDialog(body: MyWeather): AlertDialog {
