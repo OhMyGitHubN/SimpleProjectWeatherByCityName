@@ -52,8 +52,14 @@ class MainActivity : AppCompatActivity() {
             try {
                 checkViewsVisibility(true)
                 myViewModel.getCityId("${myText.text}")
-                myViewModel.myCityId.observe(this) { myViewModel.getWeather(it) }
-                myViewModel.myWeather.observe(this) { showAlertDialog(it) }
+                myViewModel.myCityId.observe(this) {
+                    myViewModel.getWeather(it)
+                    myViewModel.myCityId.removeObservers(this)
+                }
+                myViewModel.myWeather.observe(this) {
+                    showAlertDialog(it)
+                    myViewModel.myWeather.removeObservers(this)
+                }
             } catch (e: Exception) {
                 when(e) {
                     is UnknownHostException -> Log.d("Exception", "Server is unreachable")
@@ -68,6 +74,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         else showToast( "Please enter the city name")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
     }
 
     private fun showAlertDialog(body: MyWeather): AlertDialog {

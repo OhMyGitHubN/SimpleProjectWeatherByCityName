@@ -15,11 +15,14 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
     val message : LiveData<Event<String>>
         get() = statusMessage
 
-    val myText: MutableLiveData<String> = MutableLiveData("")
-    val cityId: MutableLiveData<Int> = MutableLiveData()
-    val myCityId: LiveData<Int> = cityId.distinctUntilChanged()
-    val weatherData: MutableLiveData<MyWeather> = MutableLiveData()
-    val myWeather: LiveData<MyWeather> = weatherData.distinctUntilChanged()
+    private val cityId: MutableLiveData<Int> = MutableLiveData()
+    val city: LiveData<Int>
+        get() = cityId
+    val myCityId: LiveData<Int> = city.distinctUntilChanged()
+    private val weatherData: MutableLiveData<MyWeather> = MutableLiveData()
+    val weather: LiveData<MyWeather>
+        get() = weatherData
+    val myWeather: LiveData<MyWeather> = weather.distinctUntilChanged()
 
     fun getCityId(text: String) {
         CoroutineScope(Dispatchers.Main).launch {
