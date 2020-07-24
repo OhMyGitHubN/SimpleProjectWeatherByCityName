@@ -50,8 +50,10 @@ class MainActivity : AppCompatActivity() {
     private fun getRequest(text: String) = CoroutineScope(Dispatchers.Main).launch {
         try {
             checkViewsVisibility(true)
+            // Первый Get запрос для получения cityID по cityName
             val cityId = withContext(Dispatchers.IO) { Network.weatherAPI.getLocationId(text).execute() }
             if (cityId.isSuccessful) {
+                // Второй Get запрос для получения погоды по cityID
                 val weather =  withContext(Dispatchers.IO) { cityId.body()?.get(0)?.woeid?.let { Network.weatherAPI.getWeather(it).execute() } }
                 if(weather != null && weather.isSuccessful) {
                     weather.body()?.let { showAlertDialog(it) }
