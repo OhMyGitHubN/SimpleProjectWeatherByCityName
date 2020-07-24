@@ -11,10 +11,6 @@ import androidx.databinding.DataBindingUtil.setContentView
 import androidx.lifecycle.observe
 import com.example.testproject.data.MyWeather
 import com.example.testproject.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -45,6 +41,10 @@ class MainActivity : AppCompatActivity() {
         btnGet.setOnClickListener {
             btnClicked()
         }
+
+        myViewModel.message.observe(this) {
+            it.getContentIfNotHandled()?.let { showToast(it) }
+        }
     }
 
     private fun btnClicked() {
@@ -61,13 +61,13 @@ class MainActivity : AppCompatActivity() {
                     is IOException -> Log.d("Exception", "IOException")
                     is RuntimeException -> Log.d("Exception", "RuntimeException")
                 }
-                Toast.makeText(application, "An error! Please try again later", Toast.LENGTH_SHORT).show()
+                showToast( "An error! Please try again later")
                 e.printStackTrace()
             } finally {
                 checkViewsVisibility(false)
             }
         }
-        else Toast.makeText(applicationContext, "Please enter the city name", Toast.LENGTH_SHORT).show()
+        else showToast( "Please enter the city name")
     }
 
     private fun showAlertDialog(body: MyWeather): AlertDialog {

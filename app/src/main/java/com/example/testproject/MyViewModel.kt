@@ -2,28 +2,23 @@ package com.example.testproject
 
 import android.app.Application
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.*
 import com.example.testproject.data.MyWeather
-import com.example.testproject.data.Weather
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.IOException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 
-//data class Result<out T>(val success: T? = null, val error: Throwable? = null)
 
 class MyViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val statusMessage = MutableLiveData<Event<String>>()
+    val message : LiveData<Event<String>>
+        get() = statusMessage
 
     val myText: MutableLiveData<String> = MutableLiveData("")
     val cityId: MutableLiveData<Int> = MutableLiveData()
-//    val myCityId: LiveData<Int> = Transformations.distinctUntilChanged(cityId)
     val myCityId: LiveData<Int> = cityId.distinctUntilChanged()
     val weatherData: MutableLiveData<MyWeather> = MutableLiveData()
-//    val myWeather: LiveData<MyWeather> = Transformations.distinctUntilChanged(weatherData)
     val myWeather: LiveData<MyWeather> = weatherData.distinctUntilChanged()
 
     fun getCityId(text: String) {
@@ -34,7 +29,7 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
             if (response.isSuccessful) {
                 cityId.value = response.body()?.get(0)?.woeid
             } else {
-                Toast.makeText(getApplication(), "Something wrong! Please try again later", Toast.LENGTH_SHORT).show()
+                statusMessage.value = Event("GET CityId is NOT success")
                 Log.v("Error", "cityId body ERROR: ${response.code()} ${response.errorBody()} ${response.message()}")
             }
         }
@@ -48,7 +43,7 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
             if (response.isSuccessful) {
                 weatherData.value = response.body()
             } else {
-                Toast.makeText(getApplication(), "Something wrong! Please try again later.", Toast.LENGTH_SHORT).show()
+                statusMessage.value = Event("GET Weather is NOT success")
                 Log.v("Error", "Weather body ERROR: ${response.code()} ${response.errorBody()} ${response.message()}")
             }
         }
